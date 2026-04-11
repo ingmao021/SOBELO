@@ -13,8 +13,8 @@
       </a>
 
       <div class="nav-actions">
-        <a href="#top" class="nav-link active">{{ ui.t('nav_home') }}</a>
-        <a href="#faq" class="nav-link">{{ ui.t('nav_faq') }}</a>
+        <a :href="homeHref" class="nav-link active">{{ ui.t('nav_home') }}</a>
+        <a v-if="!hideFaq" href="#faq" class="nav-link">{{ ui.t('nav_faq') }}</a>
         <button
           id="themeToggle"
           class="theme-toggle"
@@ -35,6 +35,14 @@
 <script setup lang="ts">
 import { inject } from 'vue'
 import { uiKey } from '@/appContext'
+
+withDefaults(defineProps<{
+  hideFaq?: boolean
+  homeHref?: string
+}>(), {
+  hideFaq: false,
+  homeHref: '#top'
+})
 
 const ui = inject(uiKey)
 

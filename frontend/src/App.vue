@@ -7,27 +7,36 @@
     </div>
 
     <main id="contenido" class="shell">
-      <NavBar />
+      <template v-if="isLegalPage">
+        <NavBar :hide-faq="true" home-href="/" />
+        <PrivacySection v-if="isPrivacyPage" />
+        <TermsSection v-else />
+        <FooterSection />
+      </template>
 
-      <section id="player" class="main-top">
-        <div class="video-panel">
-          <PlayerVisualizer />
-          <PlayerControls />
-        </div>
+      <template v-else>
+        <NavBar />
 
-        <SongList />
-      </section>
+        <section id="player" class="main-top">
+          <div class="video-panel">
+            <PlayerVisualizer />
+            <PlayerControls />
+          </div>
 
-      <HeroSection />
-      <FaqSection />
-      <FooterSection />
+          <SongList />
+        </section>
+
+        <HeroSection />
+        <FaqSection />
+        <FooterSection />
+      </template>
     </main>
     <AddSongModal v-if="modalOpen" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { provide, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import AddSongModal from '@/components/AddSongModal.vue'
 import FaqSection from '@/components/FaqSection.vue'
 import FooterSection from '@/components/FooterSection.vue'
@@ -35,7 +44,9 @@ import HeroSection from '@/components/HeroSection.vue'
 import NavBar from '@/components/NavBar.vue'
 import PlayerControls from '@/components/PlayerControls.vue'
 import PlayerVisualizer from '@/components/PlayerVisualizer.vue'
+import PrivacySection from '@/components/PrivacySection.vue'
 import SongList from '@/components/SongList.vue'
+import TermsSection from '@/components/TermsSection.vue'
 import { useAudioEngine } from '@/composables/useAudioEngine'
 import { usePlayer } from '@/composables/usePlayer'
 import { useUiPreferences } from '@/composables/useUiPreferences'
@@ -45,6 +56,23 @@ const playerStore = usePlayer()
 const audioStore = useAudioEngine()
 const uiStore = useUiPreferences()
 const modalOpen = ref<boolean>(false)
+const isPrivacyPage = computed(() => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.location.pathname === '/privacy'
+})
+
+const isTermsPage = computed(() => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return window.location.pathname === '/terms'
+})
+
+const isLegalPage = computed(() => isPrivacyPage.value || isTermsPage.value)
 
 const openModal = (): void => {
   modalOpen.value = true
