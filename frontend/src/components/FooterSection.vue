@@ -2,8 +2,8 @@
   <footer id="pie" class="footer">
     <div class="footer-links">
       <span>{{ ui.t('footer_copy') }}</span>
-      <a href="privacy">{{ ui.t('footer_privacy') }}</a>
-      <a href="terms">{{ ui.t('footer_terms') }}</a>
+      <a :href="`${baseUrl}privacy`">{{ ui.t('footer_privacy') }}</a>
+      <a :href="`${baseUrl}terms`">{{ ui.t('footer_terms') }}</a>
       <a href="https://github.com/ingmao021/SOBELO" target="_blank" rel="noreferrer">{{ ui.t('footer_github') }}</a>
     </div>
     <small>
@@ -18,6 +18,7 @@ import { inject } from 'vue'
 import { uiKey } from '@/appContext'
 
 const currentYear = new Date().getFullYear()
+const baseUrl = import.meta.env.BASE_URL
 const ui = inject(uiKey)
 
 if (!ui) {

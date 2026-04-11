@@ -8,7 +8,7 @@
 
     <main id="contenido" class="shell">
       <template v-if="isLegalPage">
-        <NavBar :hide-faq="true" home-href="./" />
+        <NavBar :hide-faq="true" :home-href="baseUrl" />
         <PrivacySection v-if="isPrivacyPage" />
         <TermsSection v-else />
         <FooterSection />
@@ -56,6 +56,7 @@ const playerStore = usePlayer()
 const audioStore = useAudioEngine()
 const uiStore = useUiPreferences()
 const modalOpen = ref<boolean>(false)
+const baseUrl = import.meta.env.BASE_URL
 const lastPathSegment = computed(() => {
   if (typeof window === 'undefined') {
     return ''
