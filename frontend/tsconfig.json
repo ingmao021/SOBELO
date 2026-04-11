@@ -19,7 +19,7 @@
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"],
-      "doubly-linked-list-typescript": ["./src/lib/doubly-linked-list.ts"]
+      "doubly-linked-list-typescript": ["../src/index.ts"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"],

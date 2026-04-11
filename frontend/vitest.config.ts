@@ -9,7 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
-      'doubly-linked-list-typescript': resolve(__dirname, 'src/lib/doubly-linked-list.ts')
+      'doubly-linked-list-typescript': resolve(__dirname, '../src/index.ts')
     }
   }
 })

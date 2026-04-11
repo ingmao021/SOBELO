@@ -11,7 +11,7 @@ export default defineConfig({
     extensions: ['.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
     alias: {
       '@': resolve(__dirname, 'src'),
-      'doubly-linked-list-typescript': resolve(__dirname, './src/lib/doubly-linked-list.ts')
+      'doubly-linked-list-typescript': resolve(__dirname, '../src/index.ts')
     }
   },
   build: {

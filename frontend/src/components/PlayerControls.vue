@@ -53,14 +53,8 @@
 import { computed, inject, ref } from 'vue'
 import { audioKey, playerKey, uiKey } from '@/appContext'
 import { getPlaybackErrorMessageKey } from '@/lib/audioErrors'
-
-function mustInject<T>(value: T | undefined, name: string): T {
-  if (!value) {
-    throw new Error(`SOBELO context unavailable in ${name}`)
-  }
-
-  return value
-}
+import { formatDuration } from '@/lib/formatters'
+import { mustInject } from '@/lib/inject'
 
 const player = mustInject(inject(playerKey), 'PlayerControls/player')
 const audio = mustInject(inject(audioKey), 'PlayerControls/audio')
@@ -88,16 +82,6 @@ const repeatIcon = computed<string>(() => {
 
   return '↩'
 })
-
-function formatDuration(totalSeconds: number): string {
-  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
-    return '0:00'
-  }
-
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = Math.floor(totalSeconds % 60)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
 
 function setNotice(message: string): void {
   notice.value = message

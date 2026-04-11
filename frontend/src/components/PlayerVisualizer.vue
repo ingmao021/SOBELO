@@ -17,14 +17,7 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { audioKey } from '@/appContext'
-
-function mustInject<T>(value: T | undefined, name: string): T {
-  if (!value) {
-    throw new Error(`SOBELO context unavailable in ${name}`)
-  }
-
-  return value
-}
+import { mustInject } from '@/lib/inject'
 
 const audio = mustInject(inject(audioKey), 'PlayerVisualizer/audio')
 

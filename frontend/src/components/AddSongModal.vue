@@ -56,15 +56,8 @@
 import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { modalKey, playerKey, uiKey } from '@/appContext'
 import { MAX_AUDIO_FILE_SIZE_BYTES, validateAudioFile } from '@/lib/audioFormats'
+import { mustInject } from '@/lib/inject'
 import type { AddPosition, Song } from '@/types/song'
-
-function mustInject<T>(value: T | undefined, name: string): T {
-  if (!value) {
-    throw new Error(`SOBELO context unavailable in ${name}`)
-  }
-
-  return value
-}
 
 const modal = mustInject(inject(modalKey), 'AddSongModal/modal')
 const player = mustInject(inject(playerKey), 'AddSongModal/player')

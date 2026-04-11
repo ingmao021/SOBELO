@@ -56,15 +56,9 @@
 import { inject, ref } from 'vue'
 import { modalKey, playerKey, uiKey } from '@/appContext'
 import { validateAudioFile } from '@/lib/audioFormats'
+import { formatDuration } from '@/lib/formatters'
+import { mustInject } from '@/lib/inject'
 import type { Song } from '@/types/song'
-
-function mustInject<T>(value: T | undefined, name: string): T {
-  if (!value) {
-    throw new Error(`SOBELO context unavailable in ${name}`)
-  }
-
-  return value
-}
 
 const player = mustInject(inject(playerKey), 'SongList/player')
 const modal = mustInject(inject(modalKey), 'SongList/modal')
@@ -117,11 +111,6 @@ function onFolderSelection(event: Event): void {
   input.value = ''
 }
 
-function formatDuration(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = Math.floor(totalSeconds % 60)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
 </script>
 
 <style scoped>
