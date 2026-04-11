@@ -4,9 +4,19 @@
       <h2>{{ ui.t('player_title') }}</h2>
       <div class="playlist-actions">
         <button type="button" class="btn-primary" @click="modal.openModal">+ {{ ui.t('player_add_button') }}</button>
+        <button type="button" class="btn-secondary" @click="openFolderPicker">{{ ui.t('player_add_folder_button') }}</button>
         <button type="button" class="btn-secondary" @click="player.clearPlaylist">{{ ui.t('player_clear_button') }}</button>
       </div>
     </div>
+
+    <input
+      ref="folderInput"
+      class="folder-input"
+      type="file"
+      webkitdirectory
+      multiple
+      @change="onFolderSelection"
+    />
 
     <div v-if="player.playlist.value.length === 0" class="playlist-empty">
       <div class="icon">⌗</div>
@@ -43,15 +53,68 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
+import { inject, ref } from 'vue'
 import { modalKey, playerKey, uiKey } from '@/appContext'
+import { validateAudioFile } from '@/lib/audioFormats'
+import type { Song } from '@/types/song'
 
-const player = inject(playerKey)
-const modal = inject(modalKey)
-const ui = inject(uiKey)
+function mustInject<T>(value: T | undefined, name: string): T {
+  if (!value) {
+    throw new Error(`SOBELO context unavailable in ${name}`)
+  }
 
-if (!player || !modal || !ui) {
-  throw new Error('SOBELO context unavailable in SongList')
+  return value
+}
+
+const player = mustInject(inject(playerKey), 'SongList/player')
+const modal = mustInject(inject(modalKey), 'SongList/modal')
+const ui = mustInject(inject(uiKey), 'SongList/ui')
+
+const folderInput = ref<HTMLInputElement | null>(null)
+
+function openFolderPicker(): void {
+  folderInput.value?.click()
+}
+
+function fileNameToSongTitle(fileName: string): string {
+  const dotIndex = fileName.lastIndexOf('.')
+  if (dotIndex <= 0) {
+    return fileName
+  }
+
+  return fileName.slice(0, dotIndex)
+}
+
+function createSongFromFile(file: File): Song {
+  const generatedId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `song-${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+  return {
+    id: generatedId,
+    title: fileNameToSongTitle(file.name),
+    artist: ui.t('player_unknown_artist'),
+    duration: 0,
+    audioUrl: URL.createObjectURL(file),
+    addedAt: new Date()
+  }
+}
+
+function onFolderSelection(event: Event): void {
+  const input = event.target as HTMLInputElement
+  const files = input.files
+
+  if (!files || files.length === 0) {
+    return
+  }
+
+  const acceptedFiles = Array.from(files).filter((file) => validateAudioFile(file).ok)
+
+  for (const file of acceptedFiles) {
+    player.addSong(createSongFromFile(file), 'end')
+  }
+
+  input.value = ''
 }
 
 function formatDuration(totalSeconds: number): string {
@@ -87,7 +150,16 @@ h2 {
 
 .playlist-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.folder-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 ul {
