@@ -27,6 +27,7 @@ export function useAudioEngine() {
   const duration = ref<number>(0)
   const volume = ref<number>(1)
   const isPlaying = ref<boolean>(false)
+  const currentSongId = ref<string | null>(null)
 
   const sourceNode = ref<AudioBufferSourceNode | null>(null)
   const currentBuffer = ref<AudioBuffer | null>(null)
@@ -195,6 +196,7 @@ export function useAudioEngine() {
     duration.value = currentBuffer.value.duration
     currentTime.value = 0
     pausedAt.value = 0
+    currentSongId.value = song.id
 
     startBufferAt(0)
   }
@@ -276,6 +278,7 @@ export function useAudioEngine() {
     volume,
     analyserData,
     isPlaying,
+    currentSongId,
     play,
     pause,
     resume,

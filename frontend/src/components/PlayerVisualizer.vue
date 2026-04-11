@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { audioKey, playerKey } from '@/appContext'
+import { audioKey } from '@/appContext'
 
 function mustInject<T>(value: T | undefined, name: string): T {
   if (!value) {
@@ -26,7 +26,6 @@ function mustInject<T>(value: T | undefined, name: string): T {
   return value
 }
 
-const player = mustInject(inject(playerKey), 'PlayerVisualizer/player')
 const audio = mustInject(inject(audioKey), 'PlayerVisualizer/audio')
 
 type VisualMode = 'bars' | 'rings' | 'stars'
@@ -327,7 +326,7 @@ watch(
 )
 
 watch(
-  () => player.currentSong.value?.id,
+  () => audio.currentSongId.value,
   () => {
     if (audio.isPlaying.value && !isRandomLocked.value) {
       pickRandomVisualMode()
