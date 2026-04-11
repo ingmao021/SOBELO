@@ -179,6 +179,18 @@ export function useAudioEngine() {
     startAnalyserLoop()
   }
 
+  function resetPlaybackState(songId: string | null): void {
+    stopProgressLoop()
+    stopAnalyserLoop()
+    detachSource()
+    isPlaying.value = false
+    pausedAt.value = 0
+    currentTime.value = 0
+    duration.value = 0
+    currentBuffer.value = null
+    currentSongId.value = songId
+  }
+
   async function play(song: Song): Promise<void> {
     if (!song.audioUrl) {
       throw new AudioPlaybackError('audio_missing_url')
@@ -192,13 +204,18 @@ export function useAudioEngine() {
       detachSource()
     }
 
-    currentBuffer.value = await fetchBuffer(song.audioUrl)
-    duration.value = currentBuffer.value.duration
-    currentTime.value = 0
-    pausedAt.value = 0
-    currentSongId.value = song.id
+    try {
+      currentBuffer.value = await fetchBuffer(song.audioUrl)
+      duration.value = currentBuffer.value.duration
+      currentTime.value = 0
+      pausedAt.value = 0
+      currentSongId.value = song.id
 
-    startBufferAt(0)
+      startBufferAt(0)
+    } catch (error) {
+      resetPlaybackState(null)
+      throw error
+    }
   }
 
   function pause(): void {

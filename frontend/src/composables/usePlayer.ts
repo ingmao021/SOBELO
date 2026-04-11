@@ -1,10 +1,10 @@
 import { computed, ref } from 'vue'
-import { List } from 'doubly-linked-list-typescript'
+import { MusicPlayer } from 'doubly-linked-list-typescript'
 import type { AddPosition, RepeatMode, Song } from '@/types/song'
 
-const list = new List<Song>()
+const musicPlayer = new MusicPlayer<Song>()
 
-const playlist = ref<Song[]>(list.toArray())
+const playlist = ref<Song[]>(musicPlayer.toArray())
 const currentIndex = ref<number>(playlist.value.length > 0 ? 0 : -1)
 const isPlaying = ref<boolean>(false)
 const isShuffled = ref<boolean>(false)
@@ -33,7 +33,7 @@ const currentSong = computed<Song | null>(() => {
 })
 
 function syncPlaylistState(): void {
-  playlist.value = list.toArray()
+  playlist.value = musicPlayer.toArray()
 
   if (playlist.value.length === 0) {
     currentIndex.value = -1
@@ -57,12 +57,12 @@ function resetShuffleState(): void {
 }
 
 function replaceListContent(songs: Song[]): void {
-  while (list.length > 0) {
-    list.removeByIndex(0)
+  while (musicPlayer.length > 0) {
+    musicPlayer.removeByIndex(0)
   }
 
   for (const song of songs) {
-    list.push(song)
+    musicPlayer.push(song)
   }
 }
 
@@ -85,7 +85,7 @@ function addSong(song: Song, position: AddPosition, index?: number): void {
   resetShuffleState()
 
   if (position === 'start') {
-    list.unshift(song)
+    musicPlayer.unshift(song)
     currentIndex.value = currentIndex.value < 0 ? 0 : currentIndex.value + 1
     syncPlaylistState()
     return
@@ -96,7 +96,7 @@ function addSong(song: Song, position: AddPosition, index?: number): void {
       throw new RangeError('Index is required when position is index')
     }
 
-    list.insertAt(index, song)
+    musicPlayer.insertAt(index, song)
     if (currentIndex.value < 0) {
       currentIndex.value = 0
     } else if (index <= currentIndex.value) {
@@ -107,7 +107,7 @@ function addSong(song: Song, position: AddPosition, index?: number): void {
     return
   }
 
-  list.push(song)
+  musicPlayer.push(song)
   if (currentIndex.value < 0) {
     currentIndex.value = 0
   }
@@ -121,7 +121,7 @@ function removeSong(id: string): void {
   }
 
   const removedIndex = playlist.value.findIndex((song) => song.id === id)
-  const removedSong = list.removeByIndex(removedIndex)
+  const removedSong = musicPlayer.removeByIndex(removedIndex)
   if (!removedSong) {
     return
   }
