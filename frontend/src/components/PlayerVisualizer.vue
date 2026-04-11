@@ -11,25 +11,6 @@
       </div>
     </div>
 
-    <TransitionGroup name="node" tag="ul" class="node-row">
-      <li
-        v-for="(song, index) in player.playlist.value"
-        :key="song.id"
-        class="node-item"
-        :class="{ active: index === player.currentIndex.value }"
-        @click="player.goToSong(index)"
-      >
-        <img v-if="song.coverUrl" :src="song.coverUrl" alt="Portada" class="cover" />
-        <div v-else class="cover cover-fallback">♪</div>
-
-        <div class="meta">
-          <p class="title">{{ song.title }}</p>
-          <p class="artist">{{ song.artist }}</p>
-          <p class="duration">{{ formatDuration(song.duration) }}</p>
-        </div>
-      </li>
-    </TransitionGroup>
-
   </section>
 </template>
 
@@ -414,15 +395,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeCanvas)
 })
 
-function formatDuration(totalSeconds: number): string {
-  if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
-    return '0:00'
-  }
-
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = Math.floor(totalSeconds % 60)
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
 </script>
 
 <style scoped>
@@ -489,97 +461,6 @@ function formatDuration(totalSeconds: number): string {
 .visual-btn:focus-visible {
   outline: 2px solid rgba(125, 211, 252, 0.8);
   outline-offset: 2px;
-}
-
-.node-row {
-  list-style: none;
-  display: flex;
-  gap: 1.2rem;
-  overflow-x: auto;
-  padding: 0.2rem 0.2rem 0.7rem;
-}
-
-.node-item {
-  min-width: 210px;
-  display: grid;
-  grid-template-columns: 62px 1fr;
-  gap: 0.7rem;
-  position: relative;
-  border: 1px solid var(--line-soft);
-  background: var(--surface-overlay);
-  backdrop-filter: blur(8px);
-  border-radius: 16px;
-  padding: 0.8rem;
-  cursor: pointer;
-}
-
-.node-item::before,
-.node-item::after {
-  content: '↔';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: rgba(59, 130, 246, 0.55);
-}
-
-.node-item::before {
-  left: -0.85rem;
-}
-
-.node-item::after {
-  right: -0.85rem;
-}
-
-.node-item.active {
-  border-color: var(--blue);
-  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.2);
-}
-
-.cover {
-  width: 62px;
-  height: 62px;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
-.cover-fallback {
-  display: grid;
-  place-items: center;
-  background: rgba(59, 130, 246, 0.18);
-  font-size: 1.3rem;
-  color: var(--text-main);
-}
-
-.meta {
-  display: grid;
-  align-content: center;
-  gap: 0.25rem;
-}
-
-.title {
-  font-weight: 600;
-  color: var(--text-main);
-}
-
-.artist,
-.duration {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.node-enter-active,
-.node-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.node-enter-from {
-  opacity: 0;
-  transform: translateY(-20px) scale(0.95);
-}
-
-.node-leave-to {
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
 }
 
 @media (max-width: 760px) {
