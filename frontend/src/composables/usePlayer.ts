@@ -144,6 +144,17 @@ function goToSong(index: number): void {
   currentIndex.value = index
 }
 
+function syncCurrentSongById(songId: string | null | undefined): void {
+  if (!songId || playlist.value.length === 0) {
+    return
+  }
+
+  const index = playlist.value.findIndex((song) => song.id === songId)
+  if (index >= 0) {
+    currentIndex.value = index
+  }
+}
+
 function nextSong(): void {
   if (playlist.value.length === 0) {
     return
@@ -273,6 +284,7 @@ export function usePlayer() {
     nextSong,
     prevSong,
     goToSong,
+    syncCurrentSongById,
     shufflePlaylist,
     toggleRepeat,
     clearPlaylist

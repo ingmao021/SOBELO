@@ -55,6 +55,7 @@ const closeModal = (): void => {
 }
 
 audioStore.onEnded(() => {
+  playerStore.syncCurrentSongById(audioStore.currentSongId.value)
   playerStore.nextSong()
 })
 

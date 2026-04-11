@@ -69,7 +69,14 @@ const ui = mustInject(inject(uiKey), 'PlayerControls/ui')
 const notice = ref<string>('')
 const lastPlayedId = ref<string | null>(null)
 
-const song = computed(() => player.currentSong.value)
+const song = computed(() => {
+  const playingSongId = audio.currentSongId.value
+  if (!playingSongId) {
+    return player.currentSong.value
+  }
+
+  return player.playlist.value.find((item) => item.id === playingSongId) ?? null
+})
 const repeatIcon = computed<string>(() => {
   if (player.repeatMode.value === 'one') {
     return '🔂'
@@ -144,6 +151,10 @@ async function togglePlay(): Promise<void> {
 }
 
 async function goNext(): Promise<void> {
+  if (player.isPlaying.value || audio.isPlaying.value) {
+    player.syncCurrentSongById(audio.currentSongId.value)
+  }
+
   player.nextSong()
   if (player.isPlaying.value || audio.isPlaying.value) {
     await playCurrent(true)
@@ -151,6 +162,10 @@ async function goNext(): Promise<void> {
 }
 
 async function goPrev(): Promise<void> {
+  if (player.isPlaying.value || audio.isPlaying.value) {
+    player.syncCurrentSongById(audio.currentSongId.value)
+  }
+
   player.prevSong()
   if (player.isPlaying.value || audio.isPlaying.value) {
     await playCurrent(true)

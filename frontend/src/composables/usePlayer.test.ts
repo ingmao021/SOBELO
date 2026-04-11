@@ -132,3 +132,45 @@ describe('usePlayer shuffle', () => {
     expect(player.currentIndex.value).toBe(0)
   })
 })
+
+describe('usePlayer syncCurrentSongById', () => {
+  beforeEach(() => {
+    const player = usePlayer()
+    player.clearPlaylist()
+    player.isPlaying.value = false
+
+    while (player.repeatMode.value !== 'off') {
+      player.toggleRepeat()
+    }
+  })
+
+  it('sincroniza currentIndex al id de la cancion activa', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c', 'd'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(3)
+    player.syncCurrentSongById('a')
+
+    expect(player.currentIndex.value).toBe(0)
+    expect(player.currentSong.value?.id).toBe('a')
+  })
+
+  it('ignora id inexistente y mantiene seleccion actual', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(2)
+    player.syncCurrentSongById('missing')
+
+    expect(player.currentIndex.value).toBe(2)
+    expect(player.currentSong.value?.id).toBe('c')
+  })
+})
