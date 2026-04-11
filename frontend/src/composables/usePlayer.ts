@@ -121,7 +121,10 @@ function removeSong(id: string): void {
   }
 
   const removedIndex = playlist.value.findIndex((song) => song.id === id)
-  list.removeByData(songToRemove)
+  const removedSong = list.removeByIndex(removedIndex)
+  if (!removedSong) {
+    return
+  }
 
   if (playlist.value.length === 1) {
     currentIndex.value = -1
@@ -131,7 +134,7 @@ function removeSong(id: string): void {
     currentIndex.value -= 1
   }
 
-  disposeSongMedia(songToRemove)
+  disposeSongMedia(removedSong)
 
   resetShuffleState()
   syncPlaylistState()

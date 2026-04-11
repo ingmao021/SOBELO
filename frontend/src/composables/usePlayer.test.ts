@@ -174,3 +174,74 @@ describe('usePlayer syncCurrentSongById', () => {
     expect(player.currentSong.value?.id).toBe('c')
   })
 })
+
+describe('usePlayer removeSong', () => {
+  beforeEach(() => {
+    const player = usePlayer()
+    player.clearPlaylist()
+    player.isPlaying.value = false
+
+    while (player.repeatMode.value !== 'off') {
+      player.toggleRepeat()
+    }
+  })
+
+  it('elimina una cancion intermedia y mantiene seleccion cuando corresponde', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c', 'd'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(1)
+    player.removeSong('c')
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['a', 'b', 'd'])
+    expect(player.currentIndex.value).toBe(1)
+    expect(player.currentSong.value?.id).toBe('b')
+  })
+
+  it('ajusta currentIndex al eliminar una cancion previa a la actual', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(2)
+    player.removeSong('a')
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['b', 'c'])
+    expect(player.currentIndex.value).toBe(1)
+    expect(player.currentSong.value?.id).toBe('c')
+  })
+
+  it('vacia la playlist y deja currentIndex en -1 al eliminar la unica cancion', () => {
+    const player = usePlayer()
+    player.addSong(makeSong('a'), 'end')
+
+    player.removeSong('a')
+
+    expect(player.playlist.value).toEqual([])
+    expect(player.currentIndex.value).toBe(-1)
+    expect(player.currentSong.value).toBeNull()
+  })
+
+  it('al eliminar la cancion actual en ultima posicion selecciona la anterior', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(2)
+    player.removeSong('c')
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['a', 'b'])
+    expect(player.currentIndex.value).toBe(1)
+    expect(player.currentSong.value?.id).toBe('b')
+  })
+})
