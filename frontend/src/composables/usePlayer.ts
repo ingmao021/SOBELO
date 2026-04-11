@@ -9,6 +9,7 @@ const currentIndex = ref<number>(playlist.value.length > 0 ? 0 : -1)
 const isPlaying = ref<boolean>(false)
 const isShuffled = ref<boolean>(false)
 const repeatMode = ref<RepeatMode>('off')
+let originalOrderSnapshot: Song[] | null = null
 
 function revokeBlobUrl(url?: string): void {
   if (!url || !url.startsWith('blob:')) {
@@ -50,7 +51,39 @@ function syncPlaylistState(): void {
   }
 }
 
+function resetShuffleState(): void {
+  isShuffled.value = false
+  originalOrderSnapshot = null
+}
+
+function replaceListContent(songs: Song[]): void {
+  while (list.length > 0) {
+    list.removeByIndex(0)
+  }
+
+  for (const song of songs) {
+    list.push(song)
+  }
+}
+
+function restoreCurrentIndexBySongId(songId: string | null): void {
+  if (playlist.value.length === 0) {
+    currentIndex.value = -1
+    return
+  }
+
+  if (!songId) {
+    currentIndex.value = 0
+    return
+  }
+
+  const nextIndex = playlist.value.findIndex((song) => song.id === songId)
+  currentIndex.value = nextIndex >= 0 ? nextIndex : 0
+}
+
 function addSong(song: Song, position: AddPosition, index?: number): void {
+  resetShuffleState()
+
   if (position === 'start') {
     list.unshift(song)
     currentIndex.value = currentIndex.value < 0 ? 0 : currentIndex.value + 1
@@ -78,7 +111,6 @@ function addSong(song: Song, position: AddPosition, index?: number): void {
   if (currentIndex.value < 0) {
     currentIndex.value = 0
   }
-  isShuffled.value = false
   syncPlaylistState()
 }
 
@@ -101,7 +133,7 @@ function removeSong(id: string): void {
 
   disposeSongMedia(songToRemove)
 
-  isShuffled.value = false
+  resetShuffleState()
   syncPlaylistState()
 }
 
@@ -118,6 +150,16 @@ function nextSong(): void {
   }
 
   if (repeatMode.value === 'one') {
+    return
+  }
+
+  if (currentIndex.value < 0) {
+    currentIndex.value = 0
+    return
+  }
+
+  if (currentIndex.value >= playlist.value.length) {
+    currentIndex.value = repeatMode.value === 'all' ? 0 : playlist.value.length - 1
     return
   }
 
@@ -143,6 +185,16 @@ function prevSong(): void {
     return
   }
 
+  if (currentIndex.value < 0) {
+    currentIndex.value = 0
+    return
+  }
+
+  if (currentIndex.value >= playlist.value.length) {
+    currentIndex.value = playlist.value.length - 1
+    return
+  }
+
   if (currentIndex.value > 0) {
     currentIndex.value -= 1
     return
@@ -158,12 +210,18 @@ function shufflePlaylist(): void {
     return
   }
 
+  const currentSongId = currentSong.value?.id ?? null
+
   if (isShuffled.value) {
-    isShuffled.value = false
+    const restoredOrder = originalOrderSnapshot ?? [...playlist.value]
+    replaceListContent(restoredOrder)
+    syncPlaylistState()
+    restoreCurrentIndexBySongId(currentSongId)
+    resetShuffleState()
     return
   }
 
-  const currentSongId = currentSong.value?.id ?? null
+  originalOrderSnapshot = [...playlist.value]
   const shuffled = [...playlist.value]
 
   for (let i = shuffled.length - 1; i > 0; i -= 1) {
@@ -171,18 +229,9 @@ function shufflePlaylist(): void {
     ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
 
-  clearPlaylist()
-  for (const song of shuffled) {
-    list.push(song)
-  }
-
-  playlist.value = list.toArray()
-  currentIndex.value = currentSongId
-    ? playlist.value.findIndex((song) => song.id === currentSongId)
-    : 0
-  if (currentIndex.value < 0) {
-    currentIndex.value = 0
-  }
+  replaceListContent(shuffled)
+  syncPlaylistState()
+  restoreCurrentIndexBySongId(currentSongId)
 
   isShuffled.value = true
 }
@@ -206,10 +255,8 @@ function clearPlaylist(): void {
     disposeSongMedia(song)
   }
 
-  while (!list.isEmpty()) {
-    list.removeByIndex(0)
-  }
-  isShuffled.value = false
+  replaceListContent([])
+  resetShuffleState()
   syncPlaylistState()
 }
 
