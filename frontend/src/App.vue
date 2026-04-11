@@ -8,7 +8,7 @@
 
     <main id="contenido" class="shell">
       <template v-if="isLegalPage">
-        <NavBar :hide-faq="true" home-href="/" />
+        <NavBar :hide-faq="true" home-href="./" />
         <PrivacySection v-if="isPrivacyPage" />
         <TermsSection v-else />
         <FooterSection />
@@ -56,20 +56,23 @@ const playerStore = usePlayer()
 const audioStore = useAudioEngine()
 const uiStore = useUiPreferences()
 const modalOpen = ref<boolean>(false)
-const isPrivacyPage = computed(() => {
+const lastPathSegment = computed(() => {
   if (typeof window === 'undefined') {
-    return false
+    return ''
   }
 
-  return window.location.pathname === '/privacy'
+  const cleanedPath = window.location.pathname.replace(/\/$/, '')
+  const segments = cleanedPath.split('/').filter(Boolean)
+
+  return segments.at(-1) ?? ''
+})
+
+const isPrivacyPage = computed(() => {
+  return lastPathSegment.value === 'privacy'
 })
 
 const isTermsPage = computed(() => {
-  if (typeof window === 'undefined') {
-    return false
-  }
-
-  return window.location.pathname === '/terms'
+  return lastPathSegment.value === 'terms'
 })
 
 const isLegalPage = computed(() => isPrivacyPage.value || isTermsPage.value)

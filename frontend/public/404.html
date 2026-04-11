@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>SOBELO</title>
+    <script>
+      ;(function () {
+        const pathSegmentsToKeep = 1
+        const l = window.location
+        const baseSegments = l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/')
+        const restPath = l.pathname.slice(baseSegments.length).replace(/^\//, '')
+        const query = l.search ? l.search.slice(1).replace(/&/g, '~and~') : ''
+        const redirect =
+          baseSegments +
+          '/?/' +
+          restPath +
+          (query ? '&' + query : '') +
+          l.hash
+
+        l.replace(redirect)
+      })()
+    </script>
+  </head>
+  <body></body>
+</html>
