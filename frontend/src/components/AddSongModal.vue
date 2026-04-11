@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import { inject, onBeforeUnmount, onMounted, ref } from 'vue'
 import { modalKey, playerKey, uiKey } from '@/appContext'
+import { MAX_AUDIO_FILE_SIZE_BYTES, validateAudioFile } from '@/lib/audioFormats'
 import type { AddPosition, Song } from '@/types/song'
 
 function mustInject<T>(value: T | undefined, name: string): T {
@@ -79,7 +80,27 @@ const errorMessage = ref<string>('')
 
 function onAudioFileChange(event: Event): void {
   const target = event.target as HTMLInputElement
-  audioFile.value = target.files?.[0] ?? null
+  const nextFile = target.files?.[0] ?? null
+  const validation = validateAudioFile(nextFile)
+
+  if (!validation.ok) {
+    audioFile.value = null
+
+    if (validation.reason === 'unsupported_extension') {
+      errorMessage.value = ui.t('modal_error_audio_extension')
+    } else if (validation.reason === 'unsupported_mime') {
+      errorMessage.value = ui.t('modal_error_audio_mime')
+    } else if (validation.reason === 'file_too_large') {
+      const maxMb = Math.floor(MAX_AUDIO_FILE_SIZE_BYTES / (1024 * 1024))
+      errorMessage.value = ui.t('modal_error_audio_size').replace('{maxMb}', String(maxMb))
+    }
+
+    target.value = ''
+    return
+  }
+
+  audioFile.value = nextFile
+  errorMessage.value = ''
 }
 
 function onCoverFileChange(event: Event): void {
@@ -108,13 +129,16 @@ function submitSong(): void {
     ? crypto.randomUUID()
     : `song-${Date.now()}`
 
+  const generatedAudioUrl = audioFile.value ? URL.createObjectURL(audioFile.value) : undefined
+  const generatedCoverUrl = coverFile.value ? URL.createObjectURL(coverFile.value) : undefined
+
   const createdSong: Song = {
     id: generatedId,
     title: title.value,
     artist: artist.value,
     duration: 0,
-    audioUrl: audioFile.value ? URL.createObjectURL(audioFile.value) : undefined,
-    coverUrl: coverFile.value ? URL.createObjectURL(coverFile.value) : undefined,
+    audioUrl: generatedAudioUrl,
+    coverUrl: generatedCoverUrl,
     addedAt: new Date()
   }
 
@@ -124,6 +148,14 @@ function submitSong(): void {
     player.addSong(createdSong, position.value, targetIndex)
     closeModal()
   } catch (error) {
+    if (generatedAudioUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(generatedAudioUrl)
+    }
+
+    if (generatedCoverUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(generatedCoverUrl)
+    }
+
     errorMessage.value = error instanceof Error ? error.message : ui.t('modal_error_add')
   }
 }

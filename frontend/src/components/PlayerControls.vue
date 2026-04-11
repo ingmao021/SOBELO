@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import { computed, inject, ref } from 'vue'
 import { audioKey, playerKey, uiKey } from '@/appContext'
+import { getPlaybackErrorMessageKey } from '@/lib/audioErrors'
 
 function mustInject<T>(value: T | undefined, name: string): T {
   if (!value) {
@@ -123,7 +124,10 @@ async function playCurrent(forceRestart = false): Promise<void> {
 
     player.isPlaying.value = true
   } catch (error) {
-    const message = error instanceof Error ? error.message : ui.t('control_notice_play_failed')
+    const key = getPlaybackErrorMessageKey(error)
+    const message = error instanceof Error && key === 'control_notice_play_failed'
+      ? error.message
+      : ui.t(key)
     setNotice(message)
     player.isPlaying.value = false
   }

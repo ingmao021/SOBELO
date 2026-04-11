@@ -1,10 +1,16 @@
 import { onBeforeUnmount, ref } from 'vue'
+import { AudioPlaybackError } from '@/lib/audioErrors'
+import { isSupportedAudioMime } from '@/lib/audioFormats'
 import type { Song } from '@/types/song'
 
 type EndedHandler = () => void
 
 export function useAudioEngine() {
   const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  if (!AudioContextCtor) {
+    throw new AudioPlaybackError('audio_context_unsupported')
+  }
+
   const audioCtx = new AudioContextCtor()
 
   const gainNode = audioCtx.createGain()
@@ -43,11 +49,39 @@ export function useAudioEngine() {
   async function fetchBuffer(audioUrl: string): Promise<AudioBuffer> {
     const response = await fetch(audioUrl)
     if (!response.ok) {
-      throw new Error('No se pudo cargar el archivo de audio.')
+      throw new AudioPlaybackError('audio_network_error')
+    }
+
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType !== 'application/octet-stream' && !isSupportedAudioMime(contentType)) {
+      throw new AudioPlaybackError('audio_invalid_content_type', contentType)
     }
 
     const bytes = await response.arrayBuffer()
-    return await audioCtx.decodeAudioData(bytes)
+
+    try {
+      const decoded = await audioCtx.decodeAudioData(bytes)
+      if (!Number.isFinite(decoded.duration) || decoded.duration <= 0) {
+        throw new AudioPlaybackError('audio_buffer_invalid')
+      }
+
+      return decoded
+    } catch (error) {
+      if (error instanceof AudioPlaybackError) {
+        throw error
+      }
+
+      const name = error instanceof DOMException ? error.name : ''
+      if (name === 'NotSupportedError') {
+        throw new AudioPlaybackError('audio_decode_unsupported')
+      }
+
+      if (name === 'EncodingError' || name === 'DataError' || name === 'SyntaxError') {
+        throw new AudioPlaybackError('audio_decode_corrupt')
+      }
+
+      throw new AudioPlaybackError('audio_decode_failed')
+    }
   }
 
   function startAnalyserLoop(): void {
@@ -146,7 +180,7 @@ export function useAudioEngine() {
 
   async function play(song: Song): Promise<void> {
     if (!song.audioUrl) {
-      throw new Error('La canción seleccionada no tiene audioUrl.')
+      throw new AudioPlaybackError('audio_missing_url')
     }
 
     await ensureContextReady()

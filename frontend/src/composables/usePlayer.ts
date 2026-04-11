@@ -10,6 +10,19 @@ const isPlaying = ref<boolean>(false)
 const isShuffled = ref<boolean>(false)
 const repeatMode = ref<RepeatMode>('off')
 
+function revokeBlobUrl(url?: string): void {
+  if (!url || !url.startsWith('blob:')) {
+    return
+  }
+
+  URL.revokeObjectURL(url)
+}
+
+function disposeSongMedia(song: Song): void {
+  revokeBlobUrl(song.audioUrl)
+  revokeBlobUrl(song.coverUrl)
+}
+
 const currentSong = computed<Song | null>(() => {
   if (currentIndex.value < 0 || currentIndex.value >= playlist.value.length) {
     return null
@@ -85,6 +98,8 @@ function removeSong(id: string): void {
   } else if (removedIndex === currentIndex.value && currentIndex.value >= playlist.value.length - 1) {
     currentIndex.value -= 1
   }
+
+  disposeSongMedia(songToRemove)
 
   isShuffled.value = false
   syncPlaylistState()
@@ -187,6 +202,10 @@ function toggleRepeat(): void {
 }
 
 function clearPlaylist(): void {
+  for (const song of playlist.value) {
+    disposeSongMedia(song)
+  }
+
   while (!list.isEmpty()) {
     list.removeByIndex(0)
   }

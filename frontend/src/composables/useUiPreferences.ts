@@ -35,7 +35,7 @@ const dictionaries: Record<Language, Dictionary> = {
     intro_feature_1_title: 'Privacidad primero',
     intro_feature_1_copy: 'Todos los archivos se reproducen en tu dispositivo, sin subir contenido a servidores.',
     intro_feature_2_title: 'Formatos comunes',
-    intro_feature_2_copy: 'Compatibilidad con MP3, FLAC, WAV y OGG para uso local rapido.',
+    intro_feature_2_copy: 'Compatibilidad con MP3, FLAC, WAV y OGG para uso local rapido. En FLAC y OGG, la reproduccion puede variar segun el navegador.',
     intro_feature_3_title: 'Sin instalacion',
     intro_feature_3_copy: 'Abre, agrega canciones y reproduce inmediatamente desde el navegador.',
     intro_feature_4_title: 'Controles fluidos',
@@ -49,7 +49,7 @@ const dictionaries: Record<Language, Dictionary> = {
     faq_2_q: 'Mi privacidad esta protegida?',
     faq_2_a: 'Absolutamente. Tus archivos se procesan localmente en tu navegador y no se suben a nuestros servidores.',
     faq_3_q: 'Que formatos se admiten?',
-    faq_3_a: 'Soporta formatos como MP3, FLAC, WAV y OGG para audio local de forma segura.',
+    faq_3_a: 'Soporta MP3, FLAC, WAV y OGG para audio local. La disponibilidad de FLAC/OGG depende del navegador.',
     modal_title: 'Agregar cancion',
     modal_label_title: 'Titulo',
     modal_label_artist: 'Artista',
@@ -64,6 +64,9 @@ const dictionaries: Record<Language, Dictionary> = {
     modal_add: 'Agregar',
     modal_error_required: 'Titulo y artista son obligatorios.',
     modal_error_index: 'El indice debe ser un numero entero mayor o igual a 0.',
+    modal_error_audio_extension: 'Formato de archivo no permitido. Use MP3, FLAC, WAV u OGG.',
+    modal_error_audio_mime: 'El tipo MIME del archivo no coincide con MP3, FLAC, WAV u OGG.',
+    modal_error_audio_size: 'El archivo es demasiado grande. Maximo permitido: {maxMb} MB.',
     modal_error_add: 'No se pudo agregar la cancion.',
     footer_copy: '(c) 2026 SOBELO. Todos los derechos reservados.',
     footer_privacy: 'Politica de privacidad',
@@ -79,7 +82,11 @@ const dictionaries: Record<Language, Dictionary> = {
     control_repeat: 'Cambiar repeticion',
     control_notice_empty_list: 'No hay canciones en la lista.',
     control_notice_missing_audio: 'Esta cancion no tiene archivo de audio.',
-    control_notice_play_failed: 'No se pudo reproducir el audio.'
+    control_notice_play_failed: 'No se pudo reproducir el audio.',
+    control_notice_browser_unsupported: 'Tu navegador no soporta la reproduccion de audio requerida por la aplicacion.',
+    control_notice_format_unsupported: 'Este formato no es compatible con tu navegador para reproduccion.',
+    control_notice_audio_corrupt: 'El archivo de audio parece estar dañado o incompleto.',
+    control_notice_audio_load_failed: 'No se pudo cargar el archivo de audio.'
   },
   en: {
     skip_content: 'Skip to main content',
@@ -110,7 +117,7 @@ const dictionaries: Record<Language, Dictionary> = {
     intro_feature_1_title: 'Privacy first',
     intro_feature_1_copy: 'All files are played on your device, without uploading content to servers.',
     intro_feature_2_title: 'Common formats',
-    intro_feature_2_copy: 'Support for MP3, FLAC, WAV and OGG for fast local usage.',
+    intro_feature_2_copy: 'Support for MP3, FLAC, WAV and OGG for fast local usage. FLAC and OGG playback may vary by browser.',
     intro_feature_3_title: 'No installation',
     intro_feature_3_copy: 'Open, add songs and play instantly in your browser.',
     intro_feature_4_title: 'Smooth controls',
@@ -124,7 +131,7 @@ const dictionaries: Record<Language, Dictionary> = {
     faq_2_q: 'Is my privacy protected?',
     faq_2_a: 'Absolutely. Your files are processed locally in your browser and never uploaded to our servers.',
     faq_3_q: 'Which formats are supported?',
-    faq_3_a: 'Supports MP3, FLAC, WAV and OGG formats for secure local audio playback.',
+    faq_3_a: 'Supports MP3, FLAC, WAV and OGG for local playback. FLAC/OGG availability depends on browser support.',
     modal_title: 'Add song',
     modal_label_title: 'Title',
     modal_label_artist: 'Artist',
@@ -139,6 +146,9 @@ const dictionaries: Record<Language, Dictionary> = {
     modal_add: 'Add',
     modal_error_required: 'Title and artist are required.',
     modal_error_index: 'Index must be an integer greater than or equal to 0.',
+    modal_error_audio_extension: 'Unsupported file extension. Use MP3, FLAC, WAV or OGG.',
+    modal_error_audio_mime: 'The file MIME type does not match MP3, FLAC, WAV or OGG.',
+    modal_error_audio_size: 'The file is too large. Maximum allowed: {maxMb} MB.',
     modal_error_add: 'Could not add the song.',
     footer_copy: '(c) 2026 SOBELO. All rights reserved.',
     footer_privacy: 'Privacy policy',
@@ -154,7 +164,11 @@ const dictionaries: Record<Language, Dictionary> = {
     control_repeat: 'Toggle repeat',
     control_notice_empty_list: 'No songs in the playlist.',
     control_notice_missing_audio: 'This song does not have an audio file.',
-    control_notice_play_failed: 'Could not play audio.'
+    control_notice_play_failed: 'Could not play audio.',
+    control_notice_browser_unsupported: 'Your browser does not support the required audio playback features.',
+    control_notice_format_unsupported: 'This format is not supported for playback in your browser.',
+    control_notice_audio_corrupt: 'The audio file appears to be corrupted or incomplete.',
+    control_notice_audio_load_failed: 'Could not load the audio file.'
   }
 }
 
