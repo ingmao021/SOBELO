@@ -102,7 +102,7 @@ const audio = mustInject(inject(audioKey), 'SongList/audio')
 const modal = mustInject(inject(modalKey), 'SongList/modal')
 const ui = mustInject(inject(uiKey), 'SongList/ui')
 
-const HOLD_DELAY_MS = 300
+const HOLD_DELAY_MS = 150
 const MOVE_TOLERANCE_PX = 8
 
 const folderInput = ref<HTMLInputElement | null>(null)
