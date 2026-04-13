@@ -1,2 +1,2 @@
-export { List } from "./List";
-export { Node } from "./Node"; // Optionally export Node if needed 
+export { MusicPlayer } from "./MusicPlayer";
+export { SongNode } from "./SongNode";

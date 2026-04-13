@@ -12,6 +12,7 @@
 
     /* Strict Type-Checking Options */
     "strict": true,                    /* Enable all strict type-checking options */
+    "ignoreDeprecations": "5.0",
 
     /* Module Resolution Options */
     "moduleResolution": "node",        /* Specify module resolution strategy: 'node' (Node.js) or 'classic' */

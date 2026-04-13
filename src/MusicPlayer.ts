@@ -1,10 +1,10 @@
-import { Node } from "./Node";
+import { SongNode } from "./SongNode";
 
-export class List<T> {
+export class MusicPlayer<T> {
 
     length: number;
-    head: Node<T> | null;
-    tail: Node<T> | null;
+    head: SongNode<T> | null;
+    tail: SongNode<T> | null;
 
     constructor() {
         this.length = 0;
@@ -16,12 +16,12 @@ export class List<T> {
         return this.length === 0;
     }
 
-    private _getNode(index: number): Node<T> | null {
+    private _getNode(index: number): SongNode<T> | null {
         if (index < 0 || index >= this.length) {
             return null;
         }
 
-        let currentNode: Node<T> | null;
+        let currentNode: SongNode<T> | null;
         if (index < this.length / 2) {
             currentNode = this.head;
             for (let i = 0; i < index; i++) {
@@ -47,7 +47,7 @@ export class List<T> {
     }
 
     push(data: T): void {
-        const node = new Node(data);
+        const node = new SongNode(data);
 
         if (this.isEmpty()) {
             this.head = node;
@@ -61,7 +61,7 @@ export class List<T> {
     }
 
     unshift(data: T): void {
-        const node = new Node(data);
+        const node = new SongNode(data);
 
         if (this.isEmpty()) {
             this.head = node;
@@ -95,7 +95,7 @@ export class List<T> {
         }
 
         const prevNode = nextNode.prev;
-        const node = new Node(data);
+        const node = new SongNode(data);
 
         node.prev = prevNode;
         node.next = nextNode;
@@ -145,7 +145,7 @@ export class List<T> {
         return null;
     }
 
-    private _removeNode(nodeToRemove: Node<T>): T {
+    private _removeNode(nodeToRemove: SongNode<T>): T {
         if (nodeToRemove === this.head) {
             this.head = nodeToRemove.next;
         }
