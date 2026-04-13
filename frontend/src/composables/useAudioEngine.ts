@@ -133,6 +133,19 @@ export function useAudioEngine() {
     sourceNode.value = null
   }
 
+  function finalizeTrackEnded(): void {
+    isPlaying.value = false
+    pausedAt.value = 0
+    currentTime.value = duration.value
+    stopProgressLoop()
+    stopAnalyserLoop()
+    detachSource()
+
+    if (endedHandler) {
+      endedHandler()
+    }
+  }
+
   function createSource(buffer: AudioBuffer): AudioBufferSourceNode {
     const source = audioCtx.createBufferSource()
     source.buffer = buffer
@@ -144,16 +157,7 @@ export function useAudioEngine() {
         return
       }
 
-      isPlaying.value = false
-      pausedAt.value = 0
-      currentTime.value = duration.value
-      stopProgressLoop()
-      stopAnalyserLoop()
-      detachSource()
-
-      if (endedHandler) {
-        endedHandler()
-      }
+      finalizeTrackEnded()
     }
 
     return source
@@ -167,6 +171,7 @@ export function useAudioEngine() {
     const startOffset = Math.max(0, Math.min(offsetSeconds, currentBuffer.value.duration))
 
     detachSource()
+    manualStop = false
     const source = createSource(currentBuffer.value)
     sourceNode.value = source
     playbackStartedAt.value = audioCtx.currentTime
@@ -253,6 +258,15 @@ export function useAudioEngine() {
     const clamped = Math.max(0, Math.min(seconds, duration.value))
 
     if (isPlaying.value && sourceNode.value) {
+      if (clamped >= duration.value) {
+        manualStop = true
+        sourceNode.value.stop()
+        detachSource()
+        manualStop = false
+        finalizeTrackEnded()
+        return
+      }
+
       manualStop = true
       sourceNode.value.stop()
       detachSource()

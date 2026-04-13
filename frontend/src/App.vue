@@ -86,9 +86,65 @@ const closeModal = (): void => {
   modalOpen.value = false
 }
 
-audioStore.onEnded(() => {
+async function autoPlayNextSong(): Promise<void> {
   playerStore.syncCurrentSongById(audioStore.currentSongId.value)
+
+  const previousIndex = playerStore.currentIndex.value
+  const previousSongId = playerStore.currentSong.value?.id ?? null
+
   playerStore.nextSong()
+
+  let candidate = playerStore.currentSong.value
+  if (!candidate) {
+    playerStore.isPlaying.value = false
+    return
+  }
+
+  if (
+    playerStore.repeatMode.value === 'off'
+    && playerStore.currentIndex.value === previousIndex
+    && candidate.id === previousSongId
+  ) {
+    playerStore.isPlaying.value = false
+    return
+  }
+
+  const visitedSongIds = new Set<string>()
+
+  while (candidate && !candidate.audioUrl) {
+    if (visitedSongIds.has(candidate.id)) {
+      playerStore.isPlaying.value = false
+      return
+    }
+
+    visitedSongIds.add(candidate.id)
+
+    const beforeSkipIndex = playerStore.currentIndex.value
+    playerStore.nextSong()
+
+    if (playerStore.currentIndex.value === beforeSkipIndex) {
+      playerStore.isPlaying.value = false
+      return
+    }
+
+    candidate = playerStore.currentSong.value
+  }
+
+  if (!candidate) {
+    playerStore.isPlaying.value = false
+    return
+  }
+
+  try {
+    await audioStore.play(candidate)
+    playerStore.isPlaying.value = true
+  } catch {
+    playerStore.isPlaying.value = false
+  }
+}
+
+audioStore.onEnded(() => {
+  void autoPlayNextSong()
 })
 
 provide(playerKey, playerStore)
