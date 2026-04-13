@@ -405,6 +405,18 @@ ul {
   cursor: pointer;
   background: var(--surface-elevated);
   transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.song-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+
+.song-item:active {
+  transform: scale(0.994);
 }
 
 .song-item.active {
