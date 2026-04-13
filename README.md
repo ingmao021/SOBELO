@@ -57,17 +57,17 @@ DEl sistema ofrece la experiencia de usuario de la siguiente manera:
 
 Pantalla inicial con el reproductor activo, barra de navegacion y componentes principales de reproduccion.
 
-![Vista principal del reproductor](frontend/dist/assets/image.png)
+![Vista principal del reproductor](./frontend/dist/assets/image.png)
 
 ### 2. Gestion de la lista de reproduccion
 
 Seccion donde se visualiza la lista de canciones y las acciones para agregar, agregar carpeta o limpiar la lissta de reproducción.
 
-![Gestion de playlist](frontend/dist/assets/img_2.png)
+![Gestion de playlist](./frontend/dist/assets/img_2.png)
 
 ### 3. Controles y estado de reproduccion
 
 Descripcion: detalle de los controles de reproduccion y del estado actual de la cancion en curso.
 
-![Controles y estado de reproduccion](frontend/dist/assets/imagen_3.png)
+![Controles y estado de reproduccion](./frontend/dist/assets/imagen_3.png)
 
