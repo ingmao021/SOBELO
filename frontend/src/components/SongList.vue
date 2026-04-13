@@ -1,5 +1,5 @@
 <template>
-  <aside class="song-list" :aria-label="ui.t('player_list_aria')">
+  <aside class="song-list" :class="{ 'drag-active': isDragging }" :aria-label="ui.t('player_list_aria')">
     <div class="playlist-head">
       <h2>{{ ui.t('player_title') }}</h2>
       <div class="playlist-actions">
@@ -24,30 +24,66 @@
       <p>{{ ui.t('player_empty_copy') }}</p>
     </div>
 
-    <ul v-else>
+    <ul
+      v-else
+      ref="playlistRef"
+      @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
+      @pointercancel="onPointerCancel"
+    >
+      <template v-for="(song, index) in player.playlist.value" :key="song.id">
+        <li
+          v-if="isDragging && dragOverIndex === index"
+          class="drop-placeholder"
+          :data-drop-index="index"
+          aria-hidden="true"
+        >
+          <span>Soltar aqui</span>
+        </li>
+
+        <li
+          class="song-item"
+          :class="{
+            active: index === player.currentIndex.value,
+            dragging: isDragging && index === draggedIndex,
+            'drag-peer': isDragging && index !== draggedIndex
+          }"
+          :data-song-index="index"
+          role="button"
+          tabindex="0"
+          @pointerdown="onPointerDown(index, $event)"
+          @click="onSongClick(index)"
+          @dblclick.prevent="onSongDoubleClick(index, song)"
+          @keydown.enter="player.goToSong(index)"
+          @keydown.space.prevent="player.goToSong(index)"
+        >
+          <img v-if="song.coverUrl" :src="song.coverUrl" alt="Portada" class="thumb" />
+          <div v-else class="thumb thumb-fallback">♪</div>
+
+          <div class="song-meta">
+            <p>{{ song.title }}</p>
+            <small>{{ song.artist }} · {{ formatDuration(song.duration) }}</small>
+          </div>
+
+          <button
+            type="button"
+            class="remove-btn"
+            :disabled="isDragging"
+            :aria-label="ui.t('player_remove_song')"
+            @click.stop="player.removeSong(song.id)"
+          >
+            🗑
+          </button>
+        </li>
+      </template>
+
       <li
-        v-for="(song, index) in player.playlist.value"
-        :key="song.id"
-        class="song-item"
-        :class="{ active: index === player.currentIndex.value }"
-        role="button"
-        tabindex="0"
-        @click="player.goToSong(index)"
-        @dblclick.prevent="onSongDoubleClick(index, song)"
-        @keydown.enter="player.goToSong(index)"
-        @keydown.space.prevent="player.goToSong(index)"
+        v-if="isDragging && dragOverIndex === player.playlist.value.length"
+        class="drop-placeholder"
+        :data-drop-index="player.playlist.value.length"
+        aria-hidden="true"
       >
-        <img v-if="song.coverUrl" :src="song.coverUrl" alt="Portada" class="thumb" />
-        <div v-else class="thumb thumb-fallback">♪</div>
-
-        <div class="song-meta">
-          <p>{{ song.title }}</p>
-          <small>{{ song.artist }} · {{ formatDuration(song.duration) }}</small>
-        </div>
-
-        <button type="button" class="remove-btn" :aria-label="ui.t('player_remove_song')" @click.stop="player.removeSong(song.id)">
-          🗑
-        </button>
+        <span>Soltar aqui</span>
       </li>
     </ul>
   </aside>
@@ -66,10 +102,163 @@ const audio = mustInject(inject(audioKey), 'SongList/audio')
 const modal = mustInject(inject(modalKey), 'SongList/modal')
 const ui = mustInject(inject(uiKey), 'SongList/ui')
 
+const HOLD_DELAY_MS = 300
+const MOVE_TOLERANCE_PX = 8
+
 const folderInput = ref<HTMLInputElement | null>(null)
+const playlistRef = ref<HTMLUListElement | null>(null)
+
+let holdTimerId: number | null = null
+let pointerStartX = 0
+let pointerStartY = 0
+let activePointerId: number | null = null
+let holdSourceIndex: number | null = null
+let suppressPressUntil = 0
+
+const isDragging = ref<boolean>(false)
+const draggedIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
 
 function openFolderPicker(): void {
   folderInput.value?.click()
+}
+
+function clearHoldTimer(): void {
+  if (holdTimerId === null) {
+    return
+  }
+
+  window.clearTimeout(holdTimerId)
+  holdTimerId = null
+}
+
+function cleanupDragState(): void {
+  clearHoldTimer()
+  isDragging.value = false
+  draggedIndex.value = null
+  dragOverIndex.value = null
+  activePointerId = null
+  holdSourceIndex = null
+}
+
+function resolveDropIndexFromEvent(event: PointerEvent): number {
+  const target = event.target as HTMLElement | null
+  const dropTarget = target?.closest('[data-drop-index]') as HTMLElement | null
+  if (dropTarget?.dataset.dropIndex) {
+    return Number(dropTarget.dataset.dropIndex)
+  }
+
+  const songTarget = target?.closest('[data-song-index]') as HTMLElement | null
+  if (songTarget?.dataset.songIndex) {
+    const itemIndex = Number(songTarget.dataset.songIndex)
+    const rect = songTarget.getBoundingClientRect()
+    if (rect.height > 0 && event.clientY > rect.top + rect.height / 2) {
+      return itemIndex + 1
+    }
+
+    if (rect.height <= 0 && event.clientY >= rect.top) {
+      return itemIndex + 1
+    }
+
+    return itemIndex
+  }
+
+  const listElement = playlistRef.value
+  if (!listElement) {
+    return player.playlist.value.length
+  }
+
+  const songElements = listElement.querySelectorAll<HTMLElement>('[data-song-index]')
+  for (const element of songElements) {
+    const indexValue = Number(element.dataset.songIndex)
+    const rect = element.getBoundingClientRect()
+
+    if (event.clientY <= rect.top + rect.height / 2) {
+      return indexValue
+    }
+  }
+
+  return player.playlist.value.length
+}
+
+function onPointerDown(index: number, event: PointerEvent): void {
+  if (Date.now() < suppressPressUntil || event.button !== 0 || event.isPrimary === false) {
+    return
+  }
+
+  const target = event.target as HTMLElement | null
+  if (target?.closest('.remove-btn')) {
+    return
+  }
+
+  clearHoldTimer()
+
+  pointerStartX = event.clientX
+  pointerStartY = event.clientY
+  activePointerId = event.pointerId
+  holdSourceIndex = index
+
+  holdTimerId = window.setTimeout(() => {
+    if (holdSourceIndex === null || activePointerId !== event.pointerId) {
+      return
+    }
+
+    isDragging.value = true
+    draggedIndex.value = holdSourceIndex
+    dragOverIndex.value = holdSourceIndex
+  }, HOLD_DELAY_MS)
+}
+
+function onPointerMove(event: PointerEvent): void {
+  if (activePointerId !== event.pointerId) {
+    return
+  }
+
+  if (!isDragging.value) {
+    const moveX = Math.abs(event.clientX - pointerStartX)
+    const moveY = Math.abs(event.clientY - pointerStartY)
+    if (moveX > MOVE_TOLERANCE_PX || moveY > MOVE_TOLERANCE_PX) {
+      clearHoldTimer()
+    }
+
+    return
+  }
+
+  event.preventDefault()
+  dragOverIndex.value = resolveDropIndexFromEvent(event)
+}
+
+function onPointerUp(event: PointerEvent): void {
+  if (activePointerId !== event.pointerId) {
+    return
+  }
+
+  const wasDragging = isDragging.value
+  const fromIndex = draggedIndex.value
+  const toIndex = dragOverIndex.value
+
+  cleanupDragState()
+
+  if (wasDragging && fromIndex !== null && toIndex !== null) {
+    player.moveSong(fromIndex, toIndex)
+    suppressPressUntil = Date.now() + 180
+  }
+}
+
+function onPointerCancel(event: PointerEvent): void {
+  if (activePointerId !== event.pointerId) {
+    return
+  }
+
+  cleanupDragState()
+}
+
+function onSongClick(index: number): void {
+  if (Date.now() < suppressPressUntil) {
+    return
+  }
+
+  player.goToSong(index)
 }
 
 function fileNameToSongTitle(fileName: string): string {
@@ -114,6 +303,10 @@ function onFolderSelection(event: Event): void {
 }
 
 async function onSongDoubleClick(index: number, song: Song): Promise<void> {
+  if (Date.now() < suppressPressUntil || isDragging.value) {
+    return
+  }
+
   player.goToSong(index)
 
   if (!song.audioUrl) {
@@ -211,11 +404,49 @@ ul {
   border-left: 3px solid transparent;
   cursor: pointer;
   background: var(--surface-elevated);
+  transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
 }
 
 .song-item.active {
   background: rgba(59, 130, 246, 0.1);
   border-left-color: var(--blue);
+}
+
+.drag-active .song-item {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.drag-active ul {
+  touch-action: none;
+}
+
+.song-item.dragging {
+  opacity: 0.45;
+  transform: scale(0.985);
+}
+
+.song-item.drag-peer {
+  opacity: 0.8;
+}
+
+.drop-placeholder {
+  min-height: 58px;
+  border-radius: 10px;
+  border: 1px dashed var(--blue);
+  background: rgba(59, 130, 246, 0.12);
+  display: grid;
+  place-items: center;
+  color: var(--text-main);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.remove-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .thumb {

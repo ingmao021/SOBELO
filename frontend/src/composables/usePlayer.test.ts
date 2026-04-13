@@ -245,3 +245,81 @@ describe('usePlayer removeSong', () => {
     expect(player.currentSong.value?.id).toBe('b')
   })
 })
+
+describe('usePlayer moveSong', () => {
+  beforeEach(() => {
+    const player = usePlayer()
+    player.clearPlaylist()
+    player.isPlaying.value = false
+
+    while (player.repeatMode.value !== 'off') {
+      player.toggleRepeat()
+    }
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('mueve una cancion a otra posicion y actualiza el orden visible', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c', 'd'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.moveSong(3, 1)
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['a', 'd', 'b', 'c'])
+  })
+
+  it('mantiene seleccionada la cancion activa por id despues de mover elementos', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c', 'd'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(2)
+    player.moveSong(0, 4)
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['b', 'c', 'd', 'a'])
+    expect(player.currentSong.value?.id).toBe('c')
+    expect(player.currentIndex.value).toBe(1)
+  })
+
+  it('al mover la cancion activa mantiene la cancion actual y ajusta indice', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c', 'd'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    player.goToSong(3)
+    player.moveSong(3, 1)
+
+    expect(player.playlist.value.map((song) => song.id)).toEqual(['a', 'd', 'b', 'c'])
+    expect(player.currentSong.value?.id).toBe('d')
+    expect(player.currentIndex.value).toBe(1)
+  })
+
+  it('invalida estado shuffle despues de reorden manual', () => {
+    const player = usePlayer()
+    const songs = ['a', 'b', 'c'].map(makeSong)
+
+    for (const song of songs) {
+      player.addSong(song, 'end')
+    }
+
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    player.shufflePlaylist()
+    expect(player.isShuffled.value).toBe(true)
+
+    player.moveSong(0, 3)
+
+    expect(player.isShuffled.value).toBe(false)
+  })
+})

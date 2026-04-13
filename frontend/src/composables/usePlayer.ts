@@ -147,6 +147,35 @@ function goToSong(index: number): void {
   currentIndex.value = index
 }
 
+function moveSong(fromIndex: number, toIndex: number): void {
+  if (playlist.value.length <= 1) {
+    return
+  }
+
+  if (fromIndex < 0 || fromIndex >= playlist.value.length) {
+    return
+  }
+
+  const boundedToIndex = Math.max(0, Math.min(toIndex, playlist.value.length))
+  if (boundedToIndex === fromIndex || boundedToIndex === fromIndex + 1) {
+    return
+  }
+
+  const activeSongId = currentSong.value?.id ?? null
+  const movedSong = musicPlayer.removeByIndex(fromIndex)
+  if (!movedSong) {
+    return
+  }
+
+  const rawInsertionIndex = boundedToIndex > fromIndex ? boundedToIndex - 1 : boundedToIndex
+  const insertionIndex = Math.max(0, Math.min(rawInsertionIndex, musicPlayer.length))
+
+  musicPlayer.insertAt(insertionIndex, movedSong)
+  resetShuffleState()
+  syncPlaylistState()
+  restoreCurrentIndexBySongId(activeSongId)
+}
+
 function syncCurrentSongById(songId: string | null | undefined): void {
   if (!songId || playlist.value.length === 0) {
     return
@@ -287,6 +316,7 @@ export function usePlayer() {
     nextSong,
     prevSong,
     goToSong,
+    moveSong,
     syncCurrentSongById,
     shufflePlaylist,
     toggleRepeat,
