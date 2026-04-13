@@ -33,6 +33,7 @@
         role="button"
         tabindex="0"
         @click="player.goToSong(index)"
+        @dblclick.prevent="onSongDoubleClick(index, song)"
         @keydown.enter="player.goToSong(index)"
         @keydown.space.prevent="player.goToSong(index)"
       >
@@ -54,13 +55,14 @@
 
 <script setup lang="ts">
 import { inject, ref } from 'vue'
-import { modalKey, playerKey, uiKey } from '@/appContext'
+import { audioKey, modalKey, playerKey, uiKey } from '@/appContext'
 import { validateAudioFile } from '@/lib/audioFormats'
 import { formatDuration } from '@/lib/formatters'
 import { mustInject } from '@/lib/inject'
 import type { Song } from '@/types/song'
 
 const player = mustInject(inject(playerKey), 'SongList/player')
+const audio = mustInject(inject(audioKey), 'SongList/audio')
 const modal = mustInject(inject(modalKey), 'SongList/modal')
 const ui = mustInject(inject(uiKey), 'SongList/ui')
 
@@ -109,6 +111,22 @@ function onFolderSelection(event: Event): void {
   }
 
   input.value = ''
+}
+
+async function onSongDoubleClick(index: number, song: Song): Promise<void> {
+  player.goToSong(index)
+
+  if (!song.audioUrl) {
+    player.isPlaying.value = false
+    return
+  }
+
+  try {
+    await audio.play(song)
+    player.isPlaying.value = true
+  } catch {
+    player.isPlaying.value = false
+  }
 }
 
 </script>
